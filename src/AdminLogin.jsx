@@ -188,6 +188,19 @@ function AdminLogin() {
           </form>
 
           {message && <p className="message">{message}</p>}
+
+          <p className="switch-text" style={{ marginTop: "16px" }}>
+            <a
+              href="/"
+              style={{
+                color: "#2563eb",
+                fontWeight: "600",
+                textDecoration: "none"
+              }}
+            >
+              ← Back to Student Website
+            </a>
+          </p>
         </div>
       </section>
     );
@@ -208,6 +221,15 @@ function AdminLogin() {
         </div>
 
         <nav className="nav">
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-btn"
+            style={{ textDecoration: "none" }}
+          >
+            🎓 View Student Site ↗
+          </a>
           <button className="user-btn" onClick={logout}>
             👤 Admin Logout
           </button>

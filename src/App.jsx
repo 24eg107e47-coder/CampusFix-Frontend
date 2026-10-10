@@ -286,6 +286,15 @@ function App() {
             ℹ️ About
           </button>
 
+          <a
+            href="/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-btn admin-portal-btn"
+          >
+            🛡️ Admin Portal ↗
+          </a>
+
           {loggedIn ? (
             <button className="user-btn" onClick={logout}>
               👤 Logout
@@ -574,6 +583,29 @@ function App() {
                   Sign Up
                 </button>
               </p>
+
+              <p
+                className="switch-text"
+                style={{
+                  marginTop: "12px",
+                  borderTop: "1px solid #e2e8f0",
+                  paddingTop: "12px"
+                }}
+              >
+                Campus Staff or Administrator?{" "}
+                <a
+                  href="/admin"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: "#2563eb",
+                    fontWeight: "600",
+                    textDecoration: "none"
+                  }}
+                >
+                  Open Admin Portal ↗
+                </a>
+              </p>
             </div>
           </section>
         )}
@@ -677,7 +709,17 @@ function App() {
 
       <footer>
         <div>🎓 © 2026 CampusFix. All rights reserved.</div>
-        <div>Building a better campus together</div>
+        <div>
+          Building a better campus together ·{" "}
+          <a
+            href="/admin"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "inherit", textDecoration: "underline" }}
+          >
+            Admin Portal ↗
+          </a>
+        </div>
         <div>❤️ Made for our college community</div>
       </footer>
     </div>
