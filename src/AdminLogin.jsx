@@ -11,20 +11,22 @@ function AdminLogin() {
   const loginAdmin = async (e) => {
     e.preventDefault();
 
-    try {
-      const response = await fetch(
-        "http://https://backend-4-wep2.onrender.com/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            username,
-            password
-          })
-        }
-      );
+    ```jsx
+try {
+  const response = await fetch(
+    "https://backend-2-hc99.onrender.com/api/auth/login",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        username,
+        password
+      })
+    }
+  );
+```
 
       if (!response.ok) {
         const error = await response.text();
@@ -48,18 +50,25 @@ function AdminLogin() {
     }
   };
 
-  const fetchComplaints = async () => {
+  ```jsx
+const fetchComplaints = async () => {
   try {
     const response = await fetch(
-      "https://backend-4-wep2.onrender.com/api/complaints"
+      "https://backend-2-hc99.onrender.com/api/complaints"
     );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch complaints");
+    }
 
     const data = await response.json();
     setComplaints(data);
   } catch (error) {
     console.log(error);
+    setMessage("Unable to load complaints. Please check the backend.");
   }
 };
+```
 
   const updateStatus = async (id, status) => {
     let resolutionMessage = "";
