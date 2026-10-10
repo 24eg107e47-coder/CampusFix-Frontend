@@ -44,19 +44,22 @@ function App() {
   }, []);
 
   const fetchComplaints = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/complaints`);
+  try {
+    const response = await fetch(
+      "https://backend-2-hc99.onrender.com/api/complaints"
+    );
 
-      if (!response.ok) {
-        throw new Error("Could not load complaints");
-      }
-
-      const data = await response.json();
-      setComplaints(data);
-    } catch (error) {
-      console.error("Loading complaints failed:", error);
+    if (!response.ok) {
+      throw new Error("Failed to fetch complaints");
     }
-  };
+
+    const data = await response.json();
+    setComplaints(data);
+  } catch (error) {
+    console.error("Error fetching complaints:", error);
+    alert("Unable to connect to backend. Please try again.");
+  }
+};
 
   const handleLogin = async (e) => {
     e.preventDefault();
