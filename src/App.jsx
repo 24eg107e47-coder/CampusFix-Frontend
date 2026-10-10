@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import AdminLogin from "./AdminLogin";
 
-const API_URL = "https://backend-2-hc99.onrender.com";
+import { API_URL } from "./config";
 
 function AppRouter() {
   if (window.location.pathname === "/admin") {

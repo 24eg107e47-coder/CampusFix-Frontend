@@ -2,7 +2,7 @@
 import { useState } from "react";
 import "./App.css";
 
-const API = "https://backend-2-hc99.onrender.com";
+import { API_URL as API } from "./config";
 
 function AdminLogin() {
   const [loggedIn, setLoggedIn] = useState(false);
