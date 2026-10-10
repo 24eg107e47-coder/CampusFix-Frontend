@@ -19,6 +19,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [search, setSearch] = useState("");
+  const [message, setMessage] = useState("");
 
   const [loginForm, setLoginForm] = useState({
     username: "",
@@ -37,49 +38,54 @@ function App() {
     location: ""
   });
 
-  const [message, setMessage] = useState("");
+  const fetchComplaints = async () => {
+    try {
+      const response = await fetch(
+        API_URL + "/api/complaints"
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch complaints");
+      }
+
+      const data = await response.json();
+      setComplaints(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching complaints:", error);
+      setMessage("Unable to load complaints. Please try again.");
+    }
+  };
 
   useEffect(() => {
     fetchComplaints();
   }, []);
-
-  const fetchComplaints = async () => {
-  try {
-    const response = await fetch(
-      "https://backend-2-hc99.onrender.com/api/complaints"
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch complaints");
-    }
-
-    const data = await response.json();
-    setComplaints(data);
-  } catch (error) {
-    console.error("Error fetching complaints:", error);
-    alert("Unable to connect to backend. Please try again.");
-  }
-};
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage("");
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(loginForm)
-      });
-
-      if (!response.ok) {
-        setMessage(await response.text());
-        return;
-      }
+      const response = await fetch(
+        API_URL + "/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(loginForm)
+        }
+      );
 
       const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          typeof data === "string"
+            ? data
+            : data.message || "Login failed. Check your credentials."
+        );
+        return;
+      }
 
       if (data.role === "ADMIN") {
         setMessage("Please use the Admin website to login.");
@@ -88,14 +94,14 @@ function App() {
 
       setLoggedIn(true);
       setUser(data);
-      setMessage("");
-      setPage("home");
-
       setLoginForm({
         username: "",
         password: ""
       });
+      setMessage("");
+      setPage("home");
     } catch (error) {
+      console.error("Login error:", error);
       setMessage("Could not connect to the backend. Please try again.");
     }
   };
@@ -105,22 +111,25 @@ function App() {
     setMessage("");
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          username: signupForm.username,
-          password: signupForm.password,
-          role: "STUDENT"
-        })
-      });
+      const response = await fetch(
+        API_URL + "/api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username: signupForm.username,
+            password: signupForm.password,
+            role: "STUDENT"
+          })
+        }
+      );
 
       const data = await response.text();
 
       if (!response.ok) {
-        setMessage(data);
+        setMessage(data || "Account creation failed.");
         return;
       }
 
@@ -133,6 +142,7 @@ function App() {
 
       setPage("login");
     } catch (error) {
+      console.error("Signup error:", error);
       setMessage("Could not connect to the backend. Please try again.");
     }
   };
@@ -141,6 +151,7 @@ function App() {
     e.preventDefault();
 
     if (!loggedIn || !user) {
+      setMessage("Please login before submitting a complaint.");
       setPage("login");
       return;
     }
@@ -148,23 +159,27 @@ function App() {
     setMessage("");
 
     try {
-      const response = await fetch(`${API_URL}/api/complaints`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          title: complaintForm.title,
-          description: complaintForm.description,
-          category: complaintForm.category,
-          location: complaintForm.location,
-          status: "Pending",
-          username: user.username
-        })
-      });
+      const response = await fetch(
+        API_URL + "/api/complaints",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            title: complaintForm.title,
+            description: complaintForm.description,
+            category: complaintForm.category,
+            location: complaintForm.location,
+            status: "Pending",
+            username: user.username
+          })
+        }
+      );
 
       if (!response.ok) {
-        setMessage(await response.text() || "Could not submit complaint.");
+        const errorText = await response.text();
+        setMessage(errorText || "Could not submit complaint.");
         return;
       }
 
@@ -180,91 +195,35 @@ function App() {
       await fetchComplaints();
       setPage("complaints");
     } catch (error) {
+      console.error("Complaint submission error:", error);
       setMessage("Could not connect to the backend. Please try again.");
-    }
-  };
-
-  const updateStatus = async (id, status) => {
-    let resolutionMessage = "";
-
-    if (status === "Resolved") {
-      resolutionMessage = window.prompt(
-        "Enter message for the student:"
-      );
-
-      if (resolutionMessage === null) {
-        return;
-      }
-
-      if (resolutionMessage.trim() === "") {
-        window.alert("Please enter a message for the student.");
-        return;
-      }
-    }
-
-    try {
-      const url =
-        `${API_URL}/api/complaints/${id}/status` +
-        `?status=${encodeURIComponent(status)}` +
-        `&resolutionMessage=${encodeURIComponent(resolutionMessage)}`;
-
-      const response = await fetch(url, {
-        method: "PUT"
-      });
-
-      if (!response.ok) {
-        window.alert("Could not update complaint status.");
-        return;
-      }
-
-      await fetchComplaints();
-    } catch (error) {
-      console.error("Updating complaint failed:", error);
-      window.alert("Could not connect to the backend.");
-    }
-  };
-
-  const deleteComplaint = async (id) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this complaint?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${API_URL}/api/complaints/${id}`,
-        {
-          method: "DELETE"
-        }
-      );
-
-      if (!response.ok) {
-        window.alert("Could not delete complaint.");
-        return;
-      }
-
-      await fetchComplaints();
-    } catch (error) {
-      console.error("Deleting complaint failed:", error);
-      window.alert("Could not connect to the backend.");
     }
   };
 
   const logout = () => {
     setLoggedIn(false);
     setUser(null);
-    setPage("login");
+    setLoginForm({
+      username: "",
+      password: ""
+    });
     setMessage("");
+    setPage("home");
   };
 
-  const filteredComplaints = complaints.filter((complaint) =>
-    `${complaint.title || ""} ${complaint.description || ""} ${complaint.category || ""} ${complaint.location || ""}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+  const filteredComplaints = complaints.filter((complaint) => {
+    const searchText = [
+      complaint.title,
+      complaint.description,
+      complaint.category,
+      complaint.location
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchText.includes(search.toLowerCase());
+  });
 
   const total = complaints.length;
 
@@ -285,6 +244,7 @@ function App() {
       <header className="header">
         <div className="logo-area">
           <div className="logo-icon">CF</div>
+
           <div>
             <h1>
               CAMPUS<span>FIX</span>
@@ -302,14 +262,18 @@ function App() {
           </button>
 
           <button
-            className={page === "complaints" ? "nav-btn active" : "nav-btn"}
+            className={
+              page === "complaints" ? "nav-btn active" : "nav-btn"
+            }
             onClick={() => setPage("complaints")}
           >
             📋 Complaints
           </button>
 
           <button
-            className={page === "dashboard" ? "nav-btn active" : "nav-btn"}
+            className={
+              page === "dashboard" ? "nav-btn active" : "nav-btn"
+            }
             onClick={() => setPage("dashboard")}
           >
             📊 Dashboard
@@ -351,7 +315,10 @@ function App() {
                 {!loggedIn && (
                   <button
                     className="hero-btn"
-                    onClick={() => setPage("login")}
+                    onClick={() => {
+                      setMessage("");
+                      setPage("login");
+                    }}
                   >
                     Get Started →
                   </button>
@@ -371,43 +338,12 @@ function App() {
               </div>
             </section>
 
-            <section className="stats">
-              <div className="stat-card">
-                <div className="stat-icon blue">📋</div>
-                <div>
-                  <h3>Total Complaints</h3>
-                  <strong>{total}</strong>
-                  <p>All complaints</p>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon orange">◷</div>
-                <div>
-                  <h3>Pending</h3>
-                  <strong>{pending}</strong>
-                  <p>Waiting for action</p>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon purple">⚙</div>
-                <div>
-                  <h3>In Progress</h3>
-                  <strong>{inProgress}</strong>
-                  <p>Currently being worked on</p>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon green">✓</div>
-                <div>
-                  <h3>Resolved</h3>
-                  <strong>{resolved}</strong>
-                  <p>Successfully resolved</p>
-                </div>
-              </div>
-            </section>
+            <Stats
+              total={total}
+              pending={pending}
+              inProgress={inProgress}
+              resolved={resolved}
+            />
 
             <section className="content-card">
               <div className="section-header">
@@ -441,9 +377,6 @@ function App() {
                   <ComplaintCard
                     key={complaint.id}
                     complaint={complaint}
-                    user={user}
-                    updateStatus={updateStatus}
-                    deleteComplaint={deleteComplaint}
                   />
                 ))}
 
@@ -458,41 +391,16 @@ function App() {
         {page === "dashboard" && (
           <section className="page-section">
             <h2>Dashboard</h2>
-            <p className="page-subtitle">Campus complaint overview</p>
+            <p className="page-subtitle">
+              Campus complaint overview
+            </p>
 
-            <section className="stats">
-              <div className="stat-card">
-                <div className="stat-icon blue">📋</div>
-                <div>
-                  <h3>Total Complaints</h3>
-                  <strong>{total}</strong>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon orange">◷</div>
-                <div>
-                  <h3>Pending</h3>
-                  <strong>{pending}</strong>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon purple">⚙</div>
-                <div>
-                  <h3>In Progress</h3>
-                  <strong>{inProgress}</strong>
-                </div>
-              </div>
-
-              <div className="stat-card">
-                <div className="stat-icon green">✓</div>
-                <div>
-                  <h3>Resolved</h3>
-                  <strong>{resolved}</strong>
-                </div>
-              </div>
-            </section>
+            <Stats
+              total={total}
+              pending={pending}
+              inProgress={inProgress}
+              resolved={resolved}
+            />
           </section>
         )}
 
@@ -529,9 +437,6 @@ function App() {
                 <ComplaintCard
                   key={complaint.id}
                   complaint={complaint}
-                  user={user}
-                  updateStatus={updateStatus}
-                  deleteComplaint={deleteComplaint}
                 />
               ))}
 
@@ -779,35 +684,73 @@ function App() {
   );
 }
 
-function ComplaintCard({
-  complaint,
-  user,
-  updateStatus,
-  deleteComplaint
-}) {
+function Stats({ total, pending, inProgress, resolved }) {
+  return (
+    <section className="stats">
+      <div className="stat-card">
+        <div className="stat-icon blue">📋</div>
+        <div>
+          <h3>Total Complaints</h3>
+          <strong>{total}</strong>
+          <p>All complaints</p>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon orange">◷</div>
+        <div>
+          <h3>Pending</h3>
+          <strong>{pending}</strong>
+          <p>Waiting for action</p>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon purple">⚙</div>
+        <div>
+          <h3>In Progress</h3>
+          <strong>{inProgress}</strong>
+          <p>Currently being worked on</p>
+        </div>
+      </div>
+
+      <div className="stat-card">
+        <div className="stat-icon green">✓</div>
+        <div>
+          <h3>Resolved</h3>
+          <strong>{resolved}</strong>
+          <p>Successfully resolved</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ComplaintCard({ complaint }) {
+  const categoryIcon =
+    complaint.category === "Electricity"
+      ? "💡"
+      : complaint.category === "Water"
+        ? "💧"
+        : complaint.category === "Cleaning"
+          ? "🧹"
+          : "🏫";
+
+  const statusClass = (complaint.status || "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
   return (
     <div className="complaint-card">
       <div className="complaint-top">
-        <div className="complaint-icon">
-          {complaint.category === "Electricity"
-            ? "💡"
-            : complaint.category === "Water"
-            ? "💧"
-            : complaint.category === "Cleaning"
-            ? "🧹"
-            : "🏫"}
-        </div>
+        <div className="complaint-icon">{categoryIcon}</div>
 
         <div className="complaint-title">
           <h3>{complaint.title}</h3>
           <span>{complaint.category}</span>
         </div>
 
-        <span
-          className={`status ${complaint.status
-            ?.toLowerCase()
-            .replace(" ", "-")}`}
-        >
+        <span className={"status " + statusClass}>
           {complaint.status}
         </span>
       </div>
@@ -817,14 +760,14 @@ function ComplaintCard({
       </div>
 
       <div className="complaint-info">
+        🆔 Complaint ID: CF-{complaint.id}
+      </div>
+
+      <div className="complaint-info">
         📅 Submitted on:{" "}
         {complaint.createdAt
           ? new Date(complaint.createdAt).toLocaleString()
           : "Not available"}
-      </div>
-
-      <div className="complaint-info">
-        🆔 Complaint ID: CF-{complaint.id}
       </div>
 
       <p className="description">{complaint.description}</p>
@@ -833,33 +776,6 @@ function ComplaintCard({
         <div className="resolution-message">
           <strong>Admin Message:</strong>{" "}
           {complaint.resolutionMessage}
-        </div>
-      )}
-
-      {user?.role === "ADMIN" && (
-        <div className="admin-controls">
-          <button onClick={() => updateStatus(complaint.id, "Pending")}>
-            Pending
-          </button>
-
-          <button onClick={() => updateStatus(complaint.id, "Assigned")}>
-            Assigned
-          </button>
-
-          <button onClick={() => updateStatus(complaint.id, "In Progress")}>
-            In Progress
-          </button>
-
-          <button onClick={() => updateStatus(complaint.id, "Resolved")}>
-            Resolved
-          </button>
-
-          <button
-            className="delete-btn"
-            onClick={() => deleteComplaint(complaint.id)}
-          >
-            Delete
-          </button>
         </div>
       )}
     </div>
