@@ -49,18 +49,17 @@ function AdminLogin() {
   };
 
   const fetchComplaints = async () => {
-    try {
-      const response = await fetch(
-        "http://https://backend-4-wep2.onrender.com/api/complaints"
-      );
+  try {
+    const response = await fetch(
+      "https://backend-4-wep2.onrender.com/api/complaints"
+    );
 
-      const data = await response.json();
-      setComplaints(data);
-
-    } catch (error) {
-      console.log(error);
-    }
-  };
+    const data = await response.json();
+    setComplaints(data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   const updateStatus = async (id, status) => {
     let resolutionMessage = "";
