@@ -13,7 +13,7 @@ function AdminLogin() {
 
     try {
       const response = await fetch(
-        "http://localhost:8080/api/auth/login",
+        "http://https://backend-4-wep2.onrender.com/api/auth/login",
         {
           method: "POST",
           headers: {
@@ -51,7 +51,7 @@ function AdminLogin() {
   const fetchComplaints = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/complaints"
+        "http://https://backend-4-wep2.onrender.com/api/complaints"
       );
 
       const data = await response.json();
@@ -82,7 +82,7 @@ function AdminLogin() {
 
     try {
       const url =
-        `http://localhost:8080/api/complaints/${id}/status` +
+        `http://https://backend-4-wep2.onrender.com/api/complaints/${id}/status` +
         `?status=${encodeURIComponent(status)}` +
         `&resolutionMessage=${encodeURIComponent(
           resolutionMessage
@@ -107,7 +107,7 @@ function AdminLogin() {
   const deleteComplaint = async (id) => {
     try {
       await fetch(
-        `http://localhost:8080/api/complaints/${id}`,
+        `http://https://backend-4-wep2.onrender.com/api/complaints/${id}`,
         {
           method: "DELETE"
         }
